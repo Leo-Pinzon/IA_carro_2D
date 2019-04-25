@@ -69,7 +69,7 @@ class CarEnv(object):
         else:
             a = np.random.uniform(*self.action_bound, size=self.action_dim)
 
-        #print("a =",a) #TODO
+        #print("a =",a) #debug
         return a
 
 
@@ -79,7 +79,7 @@ class CarEnv(object):
 
     def _get_state(self):
         s = self.sensor_info[:, 0].flatten()/self.sensor_max
-        #print("Sensores= ", s)
+        #print("Sensores= ", s) #debug
         return s
 
     def _update_sensor(self):

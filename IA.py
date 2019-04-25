@@ -1,3 +1,13 @@
+'''
+TODO:
+    Consertar ganho de pontos na finalização do tempo de execução
+    Melhorar taxa de aprendizagem
+    Melhorar pista
+    Melhorar grafico
+'''
+
+
+
 import ambiente as env
 import random
 import numpy as np
@@ -7,17 +17,17 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 from matplotlib import pyplot as plt
 
-output_dir = "memoria"
+
+output_dir = "memoria" #TODO: Parcialmente implementado
 
 env = env.CarEnv(discrete_action=True)
 state_size = env.n_sensor
 action_size = 3
-batch_size = 32 #TODO: Descobrir oq é
+batch_size = 32
 n_ep = 1000 #numero de episodios
 n_st_ep = 1000 #numero de passos por episodio
 state = env._get_state()
 
-#Definição do agente
 class DQNAgent:
     def __init__(self, state_size, action_size):
 
