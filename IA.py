@@ -18,18 +18,20 @@ from keras.optimizers import Adam
 from matplotlib import pyplot as plt
 
 
-output_dir = "memoria" #TODO: Parcialmente implementado
+output_dir = "memoria"
 
 env = env.CarEnv(discrete_action=True)
 state_size = env.n_sensor
 action_size = 3
 batch_size = 32
-n_ep = 1000 #numero de episodios
-n_st_ep = 1000 #numero de passos por episodio
+n_ep = 1000                          #numero de episodios
+n_st_ep = 700                        #numero de passos por episodio
 state = env._get_state()
+n_graf = 200                        #numero de rodadas até mostrar grafico
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
+
 
         self.state_size = state_size
         self.action_size = action_size
@@ -37,15 +39,15 @@ class DQNAgent:
         self.memory = deque(maxlen=2000)
 
         #fator de desconto
-        self.gamma = 0.95
+        self.gamma = 0.5
         #taxa de exploração
-        self.epsilon = 1.0
+        self.epsilon = 0.01
         #taxa de diminuição da exploração
-        self.epsilon_decay = 0.9999
+        self.epsilon_decay = 0.0
         #randomização minima
-        self.epsilon_min = 0.01
+        self.epsilon_min = 0.001
         #learning rate
-        self.learning_rate = 0.001
+        self.learning_rate = 0.005
 
         self.model = self._build_model()
 
@@ -96,6 +98,13 @@ class DQNAgent:
 
 agent = DQNAgent(state_size, action_size)
 
+legenda = "\n\nLEARNING RATE: {:.9f}\n" \
+                  "GAMMA: {:.9f}\n" \
+                  "E: {:.9f}\n" \
+                  "E_DECAY: {:.9f}\n" \
+                  "E_MIN: {:.9f}\n".format(agent.learning_rate, agent.gamma, agent.epsilon, agent.epsilon_decay, agent.epsilon_min)
+
+
 
 
 #############################################################################################
@@ -106,6 +115,7 @@ scores = []
 ultimos = []
 counter = 0
 medias = []
+RENDER = 1
 
 for e in range(n_ep):
 
@@ -116,12 +126,11 @@ for e in range(n_ep):
 
         env.render()
 
-
         action = agent.act(state)
 
         next_state, reward, done = env.step(action)
 
-        reward = reward if not done else -10
+        reward = reward if not done else -50
 
         next_state = np.reshape(next_state, [1, state_size])
 
@@ -130,8 +139,7 @@ for e in range(n_ep):
         state = next_state
 
 
-
-        if done:
+        if done or time == n_st_ep-1:
             print("episode: {}/{}, score: {}, e: {:.2}".format(e, n_ep, time, agent.epsilon))
             scores.append(time)
             ultimos.append(time)
@@ -139,11 +147,12 @@ for e in range(n_ep):
             if ultimos.__len__() >= 50:
                 ultimos.pop(0)
             medias.append(np.mean(ultimos))
-            if counter > 100:
+            if counter > n_graf:
                 plt.plot(scores, 'ro')
                 plt.plot(medias, 'k')
                 plt.xlabel('Episódios')
-                plt.ylabel('Pontuação')
+                plt.ylabel('Tempo até colisão')
+                plt.text(0,(np.amax(scores)+np.amin(scores))/2,legenda)
                 counter = 0
                 plt.show()
             break

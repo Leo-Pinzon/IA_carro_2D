@@ -4,13 +4,13 @@ import pyglet
 pyglet.clock.set_fps_limit(10000)
 
 class CarEnv(object):
-    n_sensor = 4 #numero de sensores
+    n_sensor = 5 #numero de sensores
     action_dim = 1
     state_dim = n_sensor
     viewer = None
     viewer_xy = (1000, 500)
     sensor_max = 150.
-    start_point = [750, 200]
+    start_point = [940, 300]
     speed = 50.
     dt = 0.1
 
@@ -24,18 +24,48 @@ class CarEnv(object):
         self.terminal = False
         # node1 (x, y, r, w, l),
         self.car_info = np.array([0, 0, 0, 20, 40], dtype=np.float64)   # car coordination
-        self.pista_int_cords = np.array([
+        self.pista_a = np.array([ #centro
             [120, 120],
             [380, 120],
             [680, 180],
             [120, 380],
+
         ])
-        self.pista_ext_cords = np.array([
-            [200, 500],
+        self.pista_b = np.array([ #superior
+            [120, 500],
+            [400, 380],
             [1000, 500],
-            [1000, 200],
-            [200, 450],
+            [200, 500],
         ])
+
+        self.pista_c = np.array([ #triangulo superior esquerdo
+            [0, 500],
+            [100, 500],
+            [0, 400],
+            [0, 500],
+        ])
+
+        self.pista_d = np.array([ #triangulo inferior esquerdo
+            [0, 0],
+            [100, 0],
+            [0, 100],
+            [0, 0],
+        ])
+
+        self.pista_e = np.array([
+            [500, 0],
+            [500, 10],
+            [1000, 70],
+            [1000, 0],
+        ])
+
+        self.pista_f = np.array([
+            [300, 200],
+            [800, 370],
+            [880, 360],
+            [850, 200],
+        ])
+
         self.sensor_info = self.sensor_max + np.zeros((self.n_sensor, 3))  # n sensors, (distance, end_x, end_y)
 
     def step(self, action):
@@ -49,7 +79,7 @@ class CarEnv(object):
 
         self._update_sensor()
         s = self._get_state()
-        r = -1 if self.terminal else 0
+        r = -1 if self.terminal else 1
         return s, r, self.terminal
 
     def reset(self):
@@ -60,7 +90,7 @@ class CarEnv(object):
 
     def render(self):
         if self.viewer is None:
-            self.viewer = Viewer(*self.viewer_xy, self.car_info, self.sensor_info, self.pista_int_cords, self.pista_ext_cords)
+            self.viewer = Viewer(*self.viewer_xy, self.car_info, self.sensor_info, self.pista_a, self.pista_b, self.pista_c, self.pista_d, self.pista_e, self.pista_f)
         self.viewer.render()
 
     def sample_action(self):
@@ -107,9 +137,9 @@ class CarEnv(object):
             possible_intersections = [self.sensor_info[si, -2:]]
 
             # obstacle collision
-            for oi in range(len(self.pista_int_cords)):
-                p = self.pista_int_cords[oi]
-                r = self.pista_int_cords[(oi + 1) % len(self.pista_int_cords)] - self.pista_int_cords[oi]
+            for oi in range(len(self.pista_a)):
+                p = self.pista_a[oi]
+                r = self.pista_a[(oi + 1) % len(self.pista_a)] - self.pista_a[oi]
                 if np.cross(r, s) != 0:  # may collision
                     t = np.cross((q - p), s) / np.cross(r, s)
                     u = np.cross((q - p), r) / np.cross(r, s)
@@ -117,9 +147,9 @@ class CarEnv(object):
                         intersection = q + u * s
                         possible_intersections.append(intersection)
                         possible_sensor_distance.append(np.linalg.norm(u*s))
-            for oi in range(len(self.pista_ext_cords)):
-                p = self.pista_ext_cords[oi]
-                r = self.pista_ext_cords[(oi + 1) % len(self.pista_ext_cords)] - self.pista_ext_cords[oi]
+            for oi in range(len(self.pista_b)):
+                p = self.pista_b[oi]
+                r = self.pista_b[(oi + 1) % len(self.pista_b)] - self.pista_b[oi]
                 if np.cross(r, s) != 0:  # may collision
                     t = np.cross((q - p), s) / np.cross(r, s)
                     u = np.cross((q - p), r) / np.cross(r, s)
@@ -127,6 +157,47 @@ class CarEnv(object):
                         intersection = q + u * s
                         possible_intersections.append(intersection)
                         possible_sensor_distance.append(np.linalg.norm(u*s))
+            for oi in range(len(self.pista_c)):
+                p = self.pista_c[oi]
+                r = self.pista_c[(oi + 1) % len(self.pista_c)] - self.pista_c[oi]
+                if np.cross(r, s) != 0:  # may collision
+                    t = np.cross((q - p), s) / np.cross(r, s)
+                    u = np.cross((q - p), r) / np.cross(r, s)
+                    if 0 <= t <= 1 and 0 <= u <= 1:
+                        intersection = q + u * s
+                        possible_intersections.append(intersection)
+                        possible_sensor_distance.append(np.linalg.norm(u*s))
+            for oi in range(len(self.pista_d)):
+                p = self.pista_d[oi]
+                r = self.pista_d[(oi + 1) % len(self.pista_d)] - self.pista_d[oi]
+                if np.cross(r, s) != 0:  # may collision
+                    t = np.cross((q - p), s) / np.cross(r, s)
+                    u = np.cross((q - p), r) / np.cross(r, s)
+                    if 0 <= t <= 1 and 0 <= u <= 1:
+                        intersection = q + u * s
+                        possible_intersections.append(intersection)
+                        possible_sensor_distance.append(np.linalg.norm(u*s))
+            for oi in range(len(self.pista_e)):
+                p = self.pista_e[oi]
+                r = self.pista_e[(oi + 1) % len(self.pista_e)] - self.pista_e[oi]
+                if np.cross(r, s) != 0:  # may collision
+                    t = np.cross((q - p), s) / np.cross(r, s)
+                    u = np.cross((q - p), r) / np.cross(r, s)
+                    if 0 <= t <= 1 and 0 <= u <= 1:
+                        intersection = q + u * s
+                        possible_intersections.append(intersection)
+                        possible_sensor_distance.append(np.linalg.norm(u*s))
+            for oi in range(len(self.pista_f)):
+                p = self.pista_f[oi]
+                r = self.pista_f[(oi + 1) % len(self.pista_f)] - self.pista_f[oi]
+                if np.cross(r, s) != 0:  # may collision
+                    t = np.cross((q - p), s) / np.cross(r, s)
+                    u = np.cross((q - p), r) / np.cross(r, s)
+                    if 0 <= t <= 1 and 0 <= u <= 1:
+                        intersection = q + u * s
+                        possible_intersections.append(intersection)
+                        possible_sensor_distance.append(np.linalg.norm(u*s))
+
 
             # window collision
             win_coord = np.array([
@@ -162,8 +233,8 @@ class Viewer(pyglet.window.Window):
     fps_display = pyglet.clock.ClockDisplay()
     bar_thc = 5
 
-    def __init__(self, width, height, car_info, sensor_info, obstacle_coords, obstacle_coords_ext):
-        super(Viewer, self).__init__(width, height, resizable=False, caption='2D car', vsync=False)  # vsync=False to not use the monitor FPS
+    def __init__(self, width, height, car_info, sensor_info, obstacle_coords_a, obstacle_coords_b, obstacle_coords_c, obstacle_coords_d, obstacle_coords_e, obstacle_coords_f):
+        super(Viewer, self).__init__(width, height, resizable=False, caption='IA Veículo 2D', vsync=False)  # vsync=False to not use the monitor FPS
         self.set_location(x=80, y=80)
         pyglet.gl.glClearColor(*self.color['background'])
 
@@ -185,8 +256,13 @@ class Viewer(pyglet.window.Window):
         self.car = self.batch.add(4, pyglet.gl.GL_QUADS, foreground, ('v2f', car_box), ('c3B', c))
 
         c = (134, 181, 244) * 4
-        self.obstacle = self.batch.add(4, pyglet.gl.GL_QUADS, background, ('v2f', obstacle_coords.flatten()), ('c3B', c))
-        self.obstacle2 = self.batch.add(4, pyglet.gl.GL_QUADS, background, ('v2f', obstacle_coords_ext.flatten()), ('c3B', c))
+        self.obstacle = self.batch.add(4, pyglet.gl.GL_QUADS, background, ('v2f', obstacle_coords_a.flatten()), ('c3B', c))
+        self.obstacle2 = self.batch.add(4, pyglet.gl.GL_QUADS, background, ('v2f', obstacle_coords_b.flatten()), ('c3B', c))
+        self.obstacle3 = self.batch.add(4, pyglet.gl.GL_QUADS, background, ('v2f', obstacle_coords_c.flatten()), ('c3B', c))
+        self.obstacle4 = self.batch.add(4, pyglet.gl.GL_QUADS, background, ('v2f', obstacle_coords_d.flatten()), ('c3B', c))
+        self.obstacle5 = self.batch.add(4, pyglet.gl.GL_QUADS, background, ('v2f', obstacle_coords_e.flatten()), ('c3B', c))
+        self.obstacle6 = self.batch.add(4, pyglet.gl.GL_QUADS, background, ('v2f', obstacle_coords_f.flatten()), ('c3B', c))
+
 
     def render(self):
         pyglet.clock.tick()
