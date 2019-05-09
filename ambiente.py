@@ -9,8 +9,8 @@ class CarEnv(object):
     state_dim = n_sensor
     viewer = None
     viewer_xy = (1000, 500)
-    sensor_max = 150.
-    start_point = [940, 300]
+    sensor_max = 70.
+    start_point = [930, 300]
     speed = 50.
     dt = 0.1
 
@@ -23,7 +23,7 @@ class CarEnv(object):
 
         self.terminal = False
         # node1 (x, y, r, w, l),
-        self.car_info = np.array([0, 0, 0, 20, 40], dtype=np.float64)   # car coordination
+        self.car_info = np.array([0, 0, 0, 15, 28], dtype=np.float64)   # car coordination
         self.pista_a = np.array([ #centro
             [120, 120],
             [380, 120],
